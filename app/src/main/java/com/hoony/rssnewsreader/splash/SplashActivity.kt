@@ -5,7 +5,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import com.hoony.rssnewsreader.MainActivity
+import com.hoony.rssnewsreader.list.ListActivity
 import com.hoony.rssnewsreader.R
 
 class SplashActivity : AppCompatActivity() {
@@ -29,7 +29,7 @@ class SplashActivity : AppCompatActivity() {
         super.onResume()
 
         runnable = Runnable {
-            val intent = Intent(applicationContext, MainActivity::class.java)
+            val intent = Intent(applicationContext, ListActivity::class.java)
             startActivity(intent)
             finish()
         }
