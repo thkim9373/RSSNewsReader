@@ -3,10 +3,12 @@ package com.hoony.rssnewsreader.list
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.hoony.rssnewsreader.data.RssItem
+import kotlinx.coroutines.*
 
-class ListViewModel : ViewModel(), RssLoadTask.RssLoadingCallback {
+class ListViewModel : ViewModel(), RssLoadTask.RssLoadingCallback,
+    NewsDataLoadTask.NewsDataLoadingCallback, NewsDataLoaderTask.NewsDataLoaderCallback {
 
-    var list: MutableLiveData<List<String>> = MutableLiveData()
+    var list: MutableLiveData<MutableList<RssItem>> = MutableLiveData()
 
     init {
         loadRssData()
@@ -17,12 +19,26 @@ class ListViewModel : ViewModel(), RssLoadTask.RssLoadingCallback {
         rssLoadTask.loadDocument()
     }
 
-    override fun rssLoadingSuccess(rssItemList: List<RssItem>) {
-        val titleList = ArrayList<String>()
-        for (news in rssItemList) {
-            titleList.add(news.title!!)
+
+    private var count: Int = 0
+
+    override fun rssLoadingSuccess(rssItemList: MutableList<RssItem>) {
+//        val newsDataLoader = NewsDataLoadTask(rssItemList, this)
+//        newsDataLoader.loadNewsData()
+
+        runBlocking {
+            val job = List(rssItemList.size) {
+                launch {
+
+                }
+            }
         }
-        this.list.value = titleList
+
+        this.list.value = rssItemList
+        for (i in rssItemList.indices) {
+            val newsDataLoaderTask = NewsDataLoaderTask(i, rssItemList[i], this)
+            newsDataLoaderTask.loadNewsData()
+        }
     }
 
 //    override fun rssLoadingSuccess(document: Document) {
@@ -43,6 +59,22 @@ class ListViewModel : ViewModel(), RssLoadTask.RssLoadingCallback {
 //    }
 
     override fun rssLoadingFail(e: Exception) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun newsDataLoadingSuccess(rssItemList: List<RssItem>) {
+//        this.list.value = rssItemList
+    }
+
+    override fun newsDataLoadingFail(e: Exception) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun newsDataLoaderSuccess(position: Int, rssItem: RssItem) {
+        this.list.value?.set(position, rssItem)
+    }
+
+    override fun newsDataLoaderFail(e: Exception) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 }

@@ -14,7 +14,7 @@ import java.util.concurrent.Executors
 
 
 // xml parser example : https://developer.android.com/training/basics/network-ops/xml#kotlin
-class RssLoadTask(private val callback: RssLoadingCallback) : Callable<List<RssItem>> {
+class RssLoadTask(private val callback: RssLoadingCallback) : Callable<MutableList<RssItem>> {
 
     private val executor: Executor = Executors.newSingleThreadExecutor()
     private val handler = Handler(Looper.getMainLooper())
@@ -22,10 +22,10 @@ class RssLoadTask(private val callback: RssLoadingCallback) : Callable<List<RssI
     private val ns: String? = null
     private val url = "https://news.google.com/rss?hl=ko&gl=KR&ceid=KR:ko"
 
-    override fun call(): List<RssItem> {
+    override fun call(): MutableList<RssItem> {
         val url = URL(this.url)
         val inputStream = url.openStream()
-        lateinit var rssItemList: List<RssItem>
+        lateinit var rssItemList: MutableList<RssItem>
 
         inputStream.use {
             val parser: XmlPullParser = Xml.newPullParser()
@@ -39,7 +39,7 @@ class RssLoadTask(private val callback: RssLoadingCallback) : Callable<List<RssI
     }
 
     @Throws(XmlPullParserException::class, IOException::class)
-    private fun readRss(parser: XmlPullParser): List<RssItem> {
+    private fun readRss(parser: XmlPullParser): MutableList<RssItem> {
         val rssItemList = mutableListOf<RssItem>()
 
         parser.require(XmlPullParser.START_TAG, ns, "rss")
@@ -92,7 +92,7 @@ class RssLoadTask(private val callback: RssLoadingCallback) : Callable<List<RssI
                 else -> skip(parser)
             }
         }
-        return RssItem(title, link)
+        return RssItem(title, link, null)
     }
 
     // Processes title tags in the feed.
@@ -166,7 +166,7 @@ class RssLoadTask(private val callback: RssLoadingCallback) : Callable<List<RssI
     }
 
     interface RssLoadingCallback {
-        fun rssLoadingSuccess(rssItemList: List<RssItem>)
+        fun rssLoadingSuccess(rssItemList: MutableList<RssItem>)
         fun rssLoadingFail(e: Exception)
     }
 }
