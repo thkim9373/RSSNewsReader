@@ -2,9 +2,7 @@ package com.hoony.rssnewsreader.list
 
 import android.os.Build
 import android.util.Log
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.liveData
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import com.hoony.rssnewsreader.data.RssItem
 import kotlinx.coroutines.*
 import org.jsoup.Jsoup
@@ -14,18 +12,18 @@ import kotlin.collections.set
 
 class ListViewModel : ViewModel(), RssLoadTask.RssLoadingCallback {
 
-    //        var list: LiveData<MutableList<RssItem>> = MutableLiveData()
-    var list = liveData {
-        Log.d("Hoony", "withContext")
-        withContext(viewModelScope.coroutineContext + Dispatchers.IO) {
-            Log.d("Hoony", "Create loader")
-            val loader = RssLoader()
-            Log.d("Hoony", "Get rss item list")
-            val rssItemList = loader.getNewsListFromRss()
-            Log.d("Hoony", "emit")
-            emit(getNewsData(rssItemList))
-        }
-    }
+            var list: MutableLiveData<MutableList<RssItem>> = MutableLiveData()
+//    var list = liveData {
+//        Log.d("Hoony", "withContext")
+//        withContext(viewModelScope.coroutineContext + Dispatchers.IO) {
+//            Log.d("Hoony", "Create loader")
+//            val loader = RssLoader()
+//            Log.d("Hoony", "Get rss item list")
+//            val rssItemList = loader.getNewsListFromRss()
+//            Log.d("Hoony", "emit")
+//            emit(getNewsData(rssItemList))
+//        }
+//    }
 
 
     init {
@@ -36,24 +34,24 @@ class ListViewModel : ViewModel(), RssLoadTask.RssLoadingCallback {
 //        val rssLoadTask = RssLoadTask(this)
 //        rssLoadTask.loadDocument()
         Log.d("Hoony", "loadRssData")
-
+        viewModelScope.launch {
+            val rssLoader = RssLoader()
+            list.value = getNewsData(rssLoader.getNewsListFromRss())
+        }
     }
 
     override fun rssLoadingSuccess(rssItemList: MutableList<RssItem>) {
-        Log.d("Hoony", "rssLoadingSuccess")
-        list = liveData {
-            Log.d("Hoony", "withContext")
-            withContext(viewModelScope.coroutineContext + Dispatchers.IO) {
-                Log.d("Hoony", "emit")
-                emit(getNewsData(rssItemList))
-            }
-        }
-//        runBlocking {
-//            setList(rssItemList)
+//        Log.d("Hoony", "rssLoadingSuccess")
+//        list = liveData {
+//            Log.d("Hoony", "withContext")
+//            withContext(viewModelScope.coroutineContext + Dispatchers.IO) {
+//                Log.d("Hoony", "emit")
+//                emit(getNewsData(rssItemList))
+//            }
 //        }
     }
 
-    private suspend fun getNewsData(rssItemList: MutableList<RssItem>): MutableList<RssItem> {
+    private suspend fun getNewsData(rssItemList: MutableList<RssItem>): MutableList<RssItem> = withContext(Dispatchers.IO) {
         val exceptionItemList: MutableList<RssItem> = arrayListOf()
 
         val deferredArray: MutableList<Deferred<Any>> = arrayListOf()
@@ -76,7 +74,7 @@ class ListViewModel : ViewModel(), RssLoadTask.RssLoadingCallback {
         }
         rssItemList.removeAll(exceptionItemList)
 
-        return rssItemList
+        rssItemList
     }
 
     private suspend fun getList(rssItemList: MutableList<RssItem>) {
@@ -204,10 +202,5 @@ class ListViewModel : ViewModel(), RssLoadTask.RssLoadingCallback {
 
     override fun rssLoadingFail(e: Exception) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        viewModelScope.cancel()
     }
 }

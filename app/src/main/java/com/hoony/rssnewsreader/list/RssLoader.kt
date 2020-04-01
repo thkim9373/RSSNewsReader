@@ -4,6 +4,8 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Xml
 import com.hoony.rssnewsreader.data.RssItem
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import java.io.IOException
@@ -18,8 +20,8 @@ class RssLoader {
     private val ns: String? = null
     private val url = "https://news.google.com/rss?hl=ko&gl=KR&ceid=KR:ko"
 
-    fun getNewsListFromRss(): MutableList<RssItem> {
-        val url = URL(this.url)
+    suspend fun getNewsListFromRss(): MutableList<RssItem> = withContext(Dispatchers.IO) {
+        val url = URL(url)
         val inputStream = url.openStream()
         lateinit var rssItemList: MutableList<RssItem>
 
@@ -31,7 +33,7 @@ class RssLoader {
             rssItemList = readRss(parser)
         }
 
-        return rssItemList
+        rssItemList
     }
 
     @Throws(XmlPullParserException::class, IOException::class)
