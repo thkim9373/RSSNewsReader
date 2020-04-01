@@ -92,7 +92,7 @@ class RssLoadTask(private val callback: RssLoadingCallback) : Callable<MutableLi
                 else -> skip(parser)
             }
         }
-        return RssItem(title, link, null)
+        return RssItem(title, link, null, null, null)
     }
 
     // Processes title tags in the feed.

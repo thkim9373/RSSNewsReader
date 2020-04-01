@@ -1,12 +1,15 @@
 package com.hoony.rssnewsreader.splash
 
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Handler
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import com.hoony.rssnewsreader.list.ListActivity
+import androidx.databinding.DataBindingUtil
 import com.hoony.rssnewsreader.R
+import com.hoony.rssnewsreader.databinding.ActivitySplashBinding
+import com.hoony.rssnewsreader.list.ListActivity
 
 class SplashActivity : AppCompatActivity() {
 
@@ -15,7 +18,8 @@ class SplashActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_splash)
+        val binding =
+            DataBindingUtil.setContentView<ActivitySplashBinding>(this, R.layout.activity_splash)
 
         window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LOW_PROFILE or
                 View.SYSTEM_UI_FLAG_FULLSCREEN or
@@ -23,6 +27,9 @@ class SplashActivity : AppCompatActivity() {
                 View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
                 View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
                 View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+
+        binding?.tvVersion?.text =
+            packageManager.getPackageInfo(packageName, PackageManager.GET_ACTIVITIES).versionName
     }
 
     override fun onResume() {

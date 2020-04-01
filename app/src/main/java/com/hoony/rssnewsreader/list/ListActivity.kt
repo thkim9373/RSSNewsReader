@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -25,12 +26,23 @@ class ListActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListener {
             )
         }
 
+        setListener()
         setView()
         setObserve()
     }
 
+    private fun setListener() {
+        binding?.swipeRefreshLayout?.setOnRefreshListener(this)
+    }
+
     private fun setView() {
         binding?.rvNews?.layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
+        binding?.rvNews?.addItemDecoration(
+            DividerItemDecoration(
+                this,
+                LinearLayoutManager.VERTICAL
+            )
+        )
     }
 
     private fun setObserve() {
@@ -38,6 +50,7 @@ class ListActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListener {
             it.list.observe(this,
                 Observer {
                     binding?.rvNews?.adapter = NewsAdapter(viewModel?.list?.value!!)
+                    binding?.swipeRefreshLayout?.isRefreshing = false
                 })
         }
     }
