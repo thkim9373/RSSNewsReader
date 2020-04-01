@@ -1,6 +1,7 @@
 package com.hoony.rssnewsreader.list
 
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
@@ -49,6 +50,7 @@ class ListActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListener {
         viewModel?.let {
             it.list.observe(this,
                 Observer {
+                    Log.d("Hoony", "observe list")
                     binding?.rvNews?.adapter = NewsAdapter(viewModel?.list?.value!!)
                     binding?.swipeRefreshLayout?.isRefreshing = false
                 })

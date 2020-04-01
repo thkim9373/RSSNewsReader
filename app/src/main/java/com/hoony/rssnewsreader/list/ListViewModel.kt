@@ -1,35 +1,87 @@
 package com.hoony.rssnewsreader.list
 
 import android.os.Build
-import androidx.lifecycle.MutableLiveData
+import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.liveData
+import androidx.lifecycle.viewModelScope
 import com.hoony.rssnewsreader.data.RssItem
 import kotlinx.coroutines.*
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import java.util.*
+import kotlin.collections.set
 
 class ListViewModel : ViewModel(), RssLoadTask.RssLoadingCallback {
 
-    var list: MutableLiveData<MutableList<RssItem>> = MutableLiveData()
+    //        var list: LiveData<MutableList<RssItem>> = MutableLiveData()
+    var list = liveData {
+        Log.d("Hoony", "withContext")
+        withContext(viewModelScope.coroutineContext + Dispatchers.IO) {
+            Log.d("Hoony", "Create loader")
+            val loader = RssLoader()
+            Log.d("Hoony", "Get rss item list")
+            val rssItemList = loader.getNewsListFromRss()
+            Log.d("Hoony", "emit")
+            emit(getNewsData(rssItemList))
+        }
+    }
+
 
     init {
         loadRssData()
     }
 
     fun loadRssData() {
-        val rssLoadTask = RssLoadTask(this)
-        rssLoadTask.loadDocument()
+//        val rssLoadTask = RssLoadTask(this)
+//        rssLoadTask.loadDocument()
+        Log.d("Hoony", "loadRssData")
+
     }
 
     override fun rssLoadingSuccess(rssItemList: MutableList<RssItem>) {
-        runBlocking {
-            setList(rssItemList)
+        Log.d("Hoony", "rssLoadingSuccess")
+        list = liveData {
+            Log.d("Hoony", "withContext")
+            withContext(viewModelScope.coroutineContext + Dispatchers.IO) {
+                Log.d("Hoony", "emit")
+                emit(getNewsData(rssItemList))
+            }
         }
+//        runBlocking {
+//            setList(rssItemList)
+//        }
     }
 
-    private suspend fun setList(rssItemList: MutableList<RssItem>) {
+    private suspend fun getNewsData(rssItemList: MutableList<RssItem>): MutableList<RssItem> {
         val exceptionItemList: MutableList<RssItem> = arrayListOf()
+
+        val deferredArray: MutableList<Deferred<Any>> = arrayListOf()
+
+        for (item in rssItemList) {
+            deferredArray.add(CoroutineScope(Dispatchers.IO).async {
+                try {
+                    val doc = getDocFromNewsLink(item.link!!)
+                    item.imageUri = getImageUri(doc)
+                    item.description = getDescription(doc)
+                    item.keyWordList = getKeywords(item.description!!)
+                } catch (e: Exception) {
+                    exceptionItemList.add(item)
+                }
+            })
+        }
+        for (item in deferredArray) {
+            Log.d("Hoony", "item.await()")
+            item.await()
+        }
+        rssItemList.removeAll(exceptionItemList)
+
+        return rssItemList
+    }
+
+    private suspend fun getList(rssItemList: MutableList<RssItem>) {
+        val exceptionItemList: MutableList<RssItem> = arrayListOf()
+
         val job = CoroutineScope(Dispatchers.IO).launch {
 
             val deferredArray: MutableList<Deferred<Any>> = arrayListOf()
@@ -47,16 +99,52 @@ class ListViewModel : ViewModel(), RssLoadTask.RssLoadingCallback {
                 })
             }
             for (item in deferredArray) {
+                Log.d("Hoony", "item.await()")
                 item.await()
             }
+            Log.d("Hoony", "item.await() all finish")
         }
 
-        job.join()
+//        Log.d("Hoony", "job.join")
+//        job.join()
 
         rssItemList.removeAll(exceptionItemList)
-
-        list.value = rssItemList
     }
+
+//    private suspend fun setList(rssItemList: MutableList<RssItem>) {
+//        val exceptionItemList: MutableList<RssItem> = arrayListOf()
+//
+//        val job = CoroutineScope(Dispatchers.IO).launch {
+//
+//            val deferredArray: MutableList<Deferred<Any>> = arrayListOf()
+//
+//            for (item in rssItemList) {
+//                deferredArray.add(async {
+//                    try {
+//                        val doc = getDocFromNewsLink(item.link!!)
+//                        item.imageUri = getImageUri(doc)
+//                        item.description = getDescription(doc)
+//                        item.keyWordList = getKeywords(item.description!!)
+//                    } catch (e: Exception) {
+//                        exceptionItemList.add(item)
+//                    }
+//                })
+//            }
+//            for (item in deferredArray) {
+//                Log.d("Hoony", "item.await()")
+//                item.await()
+//            }
+//            Log.d("Hoony", "item.await() all finish")
+//        }
+//
+////        Log.d("Hoony", "job.join")
+////        job.join()
+//
+//        rssItemList.removeAll(exceptionItemList)
+//
+//        Log.d("Hoony", "set value")
+//        list.value = rssItemList
+//    }
 
     private fun getDocFromNewsLink(newsLink: String): Document {
         return Jsoup.connect(newsLink).get()
@@ -116,5 +204,10 @@ class ListViewModel : ViewModel(), RssLoadTask.RssLoadingCallback {
 
     override fun rssLoadingFail(e: Exception) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        viewModelScope.cancel()
     }
 }

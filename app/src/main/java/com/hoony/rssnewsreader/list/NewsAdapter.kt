@@ -39,6 +39,7 @@ class NewsAdapter(private var list: List<RssItem>) : RecyclerView.Adapter<NewsIt
                 Glide.with(context)
                     .load(Uri.parse(rssItem.imageUri!!))
                     .centerCrop()
+                    .thumbnail(0.2f)
                     .diskCacheStrategy(DiskCacheStrategy.NONE)
                     .into(it.ivThumbnail)
             } else {
@@ -54,7 +55,8 @@ class NewsAdapter(private var list: List<RssItem>) : RecyclerView.Adapter<NewsIt
                 arrayListOf(it.tvKeyword1, binding.tvKeyword2, binding.tvKeyword3)
             for (i in 0..2) {
                 if (i <
-                    keyWordList!!.size) {
+                    keyWordList!!.size
+                ) {
                     keyWordTextViewArray[i].visibility = View.VISIBLE
                     keyWordTextViewArray[i].text = keyWordList[i]
                 } else {
