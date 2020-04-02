@@ -10,10 +10,11 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.hoony.rssnewsreader.R
-import com.hoony.rssnewsreader.data.RssItem
+import com.hoony.rssnewsreader.data.News
 import com.hoony.rssnewsreader.page.PageActivity
+import java.util.*
 
-class NewsAdapter(private var list: List<RssItem>) : RecyclerView.Adapter<NewsItemHolder>() {
+class NewsAdapter(private var list: List<News>) : RecyclerView.Adapter<NewsItemHolder>() {
 
     lateinit var context: Context
 
@@ -52,11 +53,9 @@ class NewsAdapter(private var list: List<RssItem>) : RecyclerView.Adapter<NewsIt
                 arrayListOf()
             }
             val keyWordTextViewArray =
-                arrayListOf(it.tvKeyword1, binding.tvKeyword2, binding.tvKeyword3)
+                arrayListOf(it.tvKeyword1, it.tvKeyword2, it.tvKeyword3)
             for (i in 0..2) {
-                if (i <
-                    keyWordList!!.size
-                ) {
+                if (i < keyWordList!!.size) {
                     keyWordTextViewArray[i].visibility = View.VISIBLE
                     keyWordTextViewArray[i].text = keyWordList[i]
                 } else {
@@ -66,6 +65,13 @@ class NewsAdapter(private var list: List<RssItem>) : RecyclerView.Adapter<NewsIt
 
             it.clContainer.setOnClickListener {
                 val intent = Intent(context, PageActivity::class.java)
+                intent.putExtra("title", rssItem.title)
+                if (rssItem.keyWordList != null) {
+                    intent.putStringArrayListExtra(
+                        "keyword_list",
+                        rssItem.keyWordList as ArrayList<String>
+                    )
+                }
                 intent.putExtra("url", rssItem.link)
                 context.startActivity(intent)
             }

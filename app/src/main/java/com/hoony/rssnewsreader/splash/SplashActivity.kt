@@ -10,6 +10,7 @@ import androidx.databinding.DataBindingUtil
 import com.hoony.rssnewsreader.R
 import com.hoony.rssnewsreader.databinding.ActivitySplashBinding
 import com.hoony.rssnewsreader.list.ListActivity
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 class SplashActivity : AppCompatActivity() {
 
@@ -32,6 +33,7 @@ class SplashActivity : AppCompatActivity() {
             packageManager.getPackageInfo(packageName, PackageManager.GET_ACTIVITIES).versionName
     }
 
+    @ExperimentalCoroutinesApi
     override fun onResume() {
         super.onResume()
 

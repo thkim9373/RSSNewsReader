@@ -1,7 +1,5 @@
-package com.hoony.rssnewsreader.list
+package com.hoony.rssnewsreader.list.loader
 
-import android.os.Handler
-import android.os.Looper
 import android.util.Xml
 import com.hoony.rssnewsreader.data.RssItem
 import kotlinx.coroutines.Dispatchers
@@ -10,15 +8,12 @@ import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import java.io.IOException
 import java.net.URL
-import java.util.concurrent.Executor
-import java.util.concurrent.Executors
-
 
 // xml parser example : https://developer.android.com/training/basics/network-ops/xml#kotlin
-class RssLoader {
+class RssReader {
 
     private val ns: String? = null
-    private val url = "https://news.google.com/rss?hl=ko&gl=KR&ceid=KR:ko"
+    private val url = "https://news.google.com/rss?hl=ko&gl=KR&ceid=KR:ko"  // 한국 뉴스
 
     suspend fun getNewsListFromRss(): MutableList<RssItem> = withContext(Dispatchers.IO) {
         val url = URL(url)
@@ -78,8 +73,8 @@ class RssLoader {
     @Throws(XmlPullParserException::class, IOException::class)
     private fun readItem(parser: XmlPullParser): RssItem {
         parser.require(XmlPullParser.START_TAG, ns, "item")
-        var title: String? = null
-        var link: String? = null
+        var title = ""
+        var link = ""
         while (parser.next() != XmlPullParser.END_TAG) {
             if (parser.eventType != XmlPullParser.START_TAG) {
                 continue
@@ -90,7 +85,7 @@ class RssLoader {
                 else -> skip(parser)
             }
         }
-        return RssItem(title, link, null, null, null)
+        return RssItem(title, link)
     }
 
     // Processes title tags in the feed.
@@ -105,17 +100,6 @@ class RssLoader {
     // Processes link tags in the feed.
     @Throws(IOException::class, XmlPullParserException::class)
     private fun readLink(parser: XmlPullParser): String {
-//        var link = ""
-//        parser.require(XmlPullParser.START_TAG, ns, "link")
-//        val tag = parser.name
-//        val relType = parser.getAttributeValue(null, "rel")
-//        if (tag == "link") {
-//            if (relType == "alternate") {
-//                link = parser.getAttributeValue(null, "href")
-//                parser.nextTag()
-//            }
-//        }
-//        parser.require(XmlPullParser.END_TAG, ns, "link")
         parser.require(XmlPullParser.START_TAG, ns, "link")
         val link = readText(parser)
         parser.require(XmlPullParser.END_TAG, ns, "link")
